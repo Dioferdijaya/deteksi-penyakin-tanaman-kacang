@@ -41,12 +41,13 @@ MANIFEST
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Large model files (optional - uncomment to track)
-# *.h5
-# *.pkl
-# *.joblib
+# Large model files
+*.h5
+*.hdf5
+*.pkl
+*.joblib
 
-# Data files (optional - uncomment to not track)
-# *.csv
-# train/
-# val/
+# Data files
+*.csv
+train/
+val/
