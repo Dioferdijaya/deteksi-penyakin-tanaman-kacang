@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Deteksi Penyakit Daun Kacang</title>
+    <style>
+        :root {
+            --primary-dark: #1b4332;
+            --primary-main: #2d6a4f;
+            --primary-light: #40916c;
+            --accent: #52b788;
+            --bg-color: #f4f6f4;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --danger-main: #9b2c2c;
+            --danger-bg: #fff5f5;
+            --success-main: #276749;
+            --success-bg: #f0fff4;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 45px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            color: var(--primary-dark);
+            font-size: 34px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 17px;
+        }
+
+        main {
+            flex: 1;
+            padding: 50px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 35px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-box {
+            border: 2px dashed var(--primary-light);
+            border-radius: 6px;
+            padding: 45px 20px;
+            text-align: center;
+            background-color: rgba(64, 145, 108, 0.02);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .upload-box:hover, .upload-box.dragover {
+            background-color: rgba(64, 145, 108, 0.06);
+            border-color: var(--primary-main);
+        }
+
+        .upload-icon {
+            color: var(--primary-main);
+            margin-bottom: 15px;
+        }
+
+        .upload-box p.primary-text {
+            color: var(--primary-dark);
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .upload-box p.secondary-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 25px;
+            background-color: var(--primary-main);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .preview-area {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .preview-area.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #imagePreview {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: block;
+            background-color: #f0f0f0;
+        }
+
+        .result-box {
+            margin-top: 25px;
+            border-radius: 6px;
+            padding: 20px;
+            border-left: 4px solid;
+            display: none;
+        }
+
+        .result-box.active {
+            display: block;
+        }
+
+        .result-box.healthy {
+            background-color: var(--success-bg);
+            border-color: var(--success-main);
+        }
+
+        .result-box.diseased {
+            background-color: var(--danger-bg);
+            border-color: var(--danger-main);
+        }
+
+        .result-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .result-box.healthy .result-header { color: var(--success-main); }
+        .result-box.diseased .result-header { color: var(--danger-main); }
+
+        .result-desc {
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        .score-container {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .score-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .result-box.healthy .score-label { color: var(--success-main); }
+        .result-box.diseased .score-label { color: var(--danger-main); }
+
+        .score-display {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .score-number {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .result-box.healthy .score-number { color: var(--success-main); }
+        .result-box.diseased .score-number { color: var(--danger-main); }
+
+        .score-unit {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .result-box.healthy .score-unit { color: var(--success-main); }
+        .result-box.diseased .score-unit { color: var(--danger-main); }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 1s ease-out;
+        }
+
+        .result-box.healthy .progress-fill { background-color: var(--success-main); }
+        .result-box.diseased .progress-fill { background-color: var(--danger-main); }
+
+        .loader {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-msg {
+            background-color: var(--danger-bg);
+            color: var(--danger-main);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #feb2b2;
+            margin-top: 20px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sistem Analisis Daun Kacang</h1>
+        <p>Evaluasi kesehatan spesimen daun berbasis kecerdasan buatan</p>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Upload Section -->
+            <div class="card">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Input Spesimen
+                </div>
+                <form id="uploadForm">
+                    <div class="upload-box" id="dropZone">
+                        <div class="upload-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        </div>
+                        <p class="primary-text">Klik atau tarik gambar kemari</p>
+                        <p class="secondary-text">Format yang didukung: JPG, PNG</p>
+                        <input type="file" id="fileInput" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn" id="submitBtn">Jalankan Analisis</button>
+                </form>
+            </div>
+
+            <!-- Result Section -->
+            <div class="card">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Hasil Pemeriksaan
+                </div>
+                
+                <div id="previewArea" class="preview-area">
+                    <img id="imagePreview" alt="Pratinjau Gambar">
+                    
+                    <div id="errorDisplay" class="error-msg"></div>
+
+                    <div id="resultBox" class="result-box">
+                        <div class="result-header" id="resTitle">Kondisi</div>
+                        <div class="result-desc" id="resDesc">Deskripsi hasil akan muncul di sini.</div>
+                        
+                        <div class="score-container">
+                            <div class="score-label">Tingkat Keyakinan (Score)</div>
+                            <div class="score-display">
+                                <span class="score-number" id="scoreVal">0</span>
+                                <span class="score-unit">%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" id="scoreBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="emptyState" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 10px; opacity: 0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <p>Belum ada gambar yang dianalisis.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const form = document.getElementById('uploadForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        const previewArea = document.getElementById('previewArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const emptyState = document.getElementById('emptyState');
+        
+        const resultBox = document.getElementById('resultBox');
+        const resTitle = document.getElementById('resTitle');
+        const resDesc = document.getElementById('resDesc');
+        const scoreVal = document.getElementById('scoreVal');
+        const scoreBar = document.getElementById('scoreBar');
+        const errorDisplay = document.getElementById('errorDisplay');
+
+        // Setup Drag & Drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt.files && dt.files.length) {
+                fileInput.files = dt.files;
+                handleFiles();
+            }
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFiles);
+
+        function handleFiles() {
+            if (fileInput.files && fileInput.files[0]) {
+                const file = fileInput.files[0];
+                
+                // Validasi file
+                if (!file.type.startsWith('image/')) {
+                    showError('File harus berupa gambar (JPG, PNG)');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        console.log('Gambar berhasil dibaca:', file.name);
+                        const result = e.target.result;
+                        
+                        if (!result) {
+                            throw new Error('FileReader result kosong');
+                        }
+                        
+                        imagePreview.src = result;
+                        imagePreview.style.display = 'block';
+                        emptyState.style.display = 'none';
+                        previewArea.classList.add('active');
+                        
+                        // Reset old result
+                        resultBox.classList.remove('active', 'healthy', 'diseased');
+                        errorDisplay.style.display = 'none';
+                        scoreBar.style.width = '0%';
+                        scoreVal.textContent = '0';
+                    } catch (err) {
+                        console.error('Error saat set gambar:', err);
+                        showError('Gagal memproses gambar. Silahkan coba lagi.');
+                    }
+                }
+                
+                reader.onerror = function(err) {
+                    console.error('FileReader error:', err);
+                    showError('Gagal membaca file. Silahkan coba lagi.');
+                }
+                
+                reader.onabort = function() {
+                    console.warn('FileReader abort');
+                    showError('Proses pembacaan file dibatalkan.');
+                }
+                
+                try {
+                    reader.readAsDataURL(file);
+                } catch (err) {
+                    console.error('Error calling readAsDataURL:', err);
+                    showError('Gagal memproses gambar.');
+                }
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!fileInput.files || !fileInput.files[0]) {
+                showError('Mohon pilih gambar terlebih dahulu.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Pastikan preview area terlihat
+            if (!previewArea.classList.contains('active')) {
+                previewArea.classList.add('active');
+            }
+
+            // UI Loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loader"></span> Memproses...';
+            resultBox.classList.remove('active');
+            errorDisplay.style.display = 'none';
+
+            try {
+                console.log('Mengirim permintaan analisis untuk:', file.name);
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('Response dari server:', data);
+                
+                if (response.ok && data.status !== 'error') {
+                    showResult(data);
+                } else {
+                    showError(data.pesan || data.error || 'Terjadi kesalahan pada server.');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                showError('Gagal terhubung ke server. Pastikan server berjalan.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Jalankan Analisis';
+            }
+        });
+
+        function showResult(data) {
+            const label = data.hasil_prediksi;
+            const confidence = data.confidence || 0;
+            const isHealthy = label.toLowerCase().includes('sehat') && !label.toLowerCase().includes('tidak');
+            
+            console.log('Hasil prediksi:', label, 'Confidence:', confidence);
+            
+            resultBox.classList.add('active');
+            resultBox.classList.remove('healthy', 'diseased');
+            resultBox.classList.add(isHealthy ? 'healthy' : 'diseased');
+            
+            resTitle.textContent = label;
+            resDesc.textContent = isHealthy 
+                ? 'Analisis menunjukkan bahwa daun dalam keadaan sehat tanpa tanda-tanda patogen.' 
+                : 'Peringatan: Daun terdeteksi memiliki gejala penyakit. Disarankan penanganan lebih lanjut.';
+                
+            animateScore(confidence);
+        }
+
+        function animateScore(target) {
+            let start = 0;
+            const duration = 800; // ms
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // easeOutQuad
+                const ease = progress * (2 - progress);
+                const current = (ease * target).toFixed(1);
+                
+                scoreVal.textContent = current;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    scoreVal.textContent = target;
+                }
+            }
+            requestAnimationFrame(update);
+            
+            setTimeout(() => {
+                scoreBar.style.width = target + '%';
+            }, 50);
+        }
+
+        function showError(msg) {
+            errorDisplay.textContent = msg;
+            errorDisplay.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
